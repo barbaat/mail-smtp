@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Envío local de correos individuales a múltiples destinatarios mediante SMTP."
+    />
+    <title>SMTP</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="SMTP, inicio">
+        <span class="brand-mark" aria-hidden="true">
+          <span></span>
+        </span>
+        <span>
+          <strong>SMTP</strong>
+          <small>entrega individual</small>
+        </span>
+      </a>
+      <p class="header-note">Un destinatario por conexión. Sin CC ni CCO.</p>
+    </header>
+
+    <div class="security-notice" role="note">
+      <span aria-hidden="true">●</span>
+      <p>
+        Las credenciales no se guardan. Si publicas esta aplicación, protégela
+        siempre con
+        <strong>HTTPS</strong>, autenticación y acceso restringido.
+      </p>
+    </div>
+
+    <main class="page-shell">
+      <section class="intro" aria-labelledby="page-title">
+        <p class="eyebrow">Mesa de salida</p>
+        <h1 id="page-title">
+          El mismo correo. <em>Cada entrega, privada.</em>
+        </h1>
+        <p class="intro-copy">
+          Prepara el servidor, compón el mensaje y revisa el manifiesto mientras
+          cada correo sale por separado.
+        </p>
+      </section>
+
+      <form id="mail-form" class="workspace" novalidate>
+        <div class="form-column">
+          <section class="panel" aria-labelledby="smtp-title">
+            <div class="panel-heading">
+              <div>
+                <p class="step-label">Configuración</p>
+                <h2 id="smtp-title">Servidor SMTP</h2>
+              </div>
+              <div class="preset-group" aria-label="Configuraciones rápidas">
+                <button
+                  class="preset-button is-active"
+                  type="button"
+                  data-preset="gmail"
+                >
+                  Gmail
+                </button>
+                <button
+                  class="preset-button"
+                  type="button"
+                  data-preset="outlook"
+                >
+                  Outlook
+                </button>
+                <button
+                  class="preset-button"
+                  type="button"
+                  data-preset="custom"
+                >
+                  Personalizado
+                </button>
+              </div>
+            </div>
+
+            <div class="field-grid field-grid--smtp">
+              <label class="field field--wide">
+                <span>Servidor SMTP</span>
+                <input
+                  id="smtp-host"
+                  name="smtpHost"
+                  type="text"
+                  value="smtp.gmail.com"
+                  placeholder="smtp.ejemplo.com"
+                  maxlength="253"
+                  autocomplete="off"
+                  required
+                />
+              </label>
+              <label class="field">
+                <span>Puerto</span>
+                <input
+                  id="smtp-port"
+                  name="smtpPort"
+                  type="number"
+                  inputmode="numeric"
+                  min="1"
+                  max="65535"
+                  value="465"
+                  placeholder="587"
+                  required
+                />
+              </label>
+              <label class="field">
+                <span>Seguridad</span>
+                <select id="smtp-security" name="smtpSecurity" required>
+                  <option value="ssl" selected>SSL/TLS</option>
+                  <option value="starttls">STARTTLS</option>
+                  <option value="none">Sin cifrado (solo local)</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Usuario SMTP</span>
+                <input
+                  id="smtp-user"
+                  name="smtpUser"
+                  type="text"
+                  value="barbatrejofco@gmail.com"
+                  autocomplete="off"
+                  spellcheck="false"
+                  placeholder="usuario@ejemplo.com"
+                  maxlength="320"
+                />
+              </label>
+              <label class="field">
+                <span>Contraseña SMTP</span>
+                <span class="password-control">
+                  <input
+                    id="smtp-password"
+                    name="smtpPassword"
+                    type="password"
+                    autocomplete="off"
+                    placeholder="Contraseña o clave de aplicación"
+                    maxlength="1024"
+                  />
+                  <button
+                    id="toggle-password"
+                    type="button"
+                    aria-label="Mostrar contraseña"
+                  >
+                    Mostrar
+                  </button>
+                </span>
+              </label>
+              <label class="field">
+                <span>Nombre del remitente</span>
+                <input
+                  id="sender-name"
+                  name="senderName"
+                  type="text"
+                  value="Francisco Javier Barba Trejo"
+                  placeholder="Equipo de soporte"
+                  maxlength="120"
+                  required
+                />
+              </label>
+              <label class="field">
+                <span>Correo del remitente</span>
+                <input
+                  id="sender-email"
+                  name="senderEmail"
+                  type="email"
+                  value="barbatrejofco@gmail.com"
+                  placeholder="soporte@ejemplo.com"
+                  maxlength="254"
+                  required
+                />
+              </label>
+            </div>
+
+            <div class="panel-actions panel-actions--smtp">
+              <p id="smtp-feedback" class="inline-feedback" aria-live="polite">
+                Las credenciales permanecen solo en esta sesión del navegador.
+              </p>
+              <button
+                id="test-smtp"
+                class="button button--secondary"
+                type="button"
+              >
+                <span class="button-spinner" aria-hidden="true"></span>
+                <span>Probar conexión SMTP</span>
+              </button>
+            </div>
+          </section>
+
+          <section class="panel" aria-labelledby="message-title">
+            <div class="panel-heading">
+              <div>
+                <p class="step-label">Contenido</p>
+                <h2 id="message-title">Correo</h2>
+              </div>
+              <div
+                class="type-switch"
+                role="radiogroup"
+                aria-label="Formato del mensaje"
+              >
+                <label>
+                  <input type="radio" name="contentType" value="text" checked />
+                  <span>Texto</span>
+                </label>
+                <label>
+                  <input type="radio" name="contentType" value="html" />
+                  <span>HTML</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="field-stack">
+              <label class="field">
+                <span class="field-label-row">
+                  <span>Destinatarios</span>
+                  <span id="recipient-count" class="count-badge"
+                    >0 válidos</span
+                  >
+                </span>
+                <textarea
+                  id="recipients"
+                  name="recipients"
+                  rows="6"
+                  placeholder="ana@ejemplo.com&#10;luis@ejemplo.com, equipo@ejemplo.com"
+                  spellcheck="false"
+                  required
+                ></textarea>
+                <small
+                  >Separa las direcciones con saltos de línea, comas o punto y
+                  coma.</small
+                >
+                <span
+                  id="recipient-feedback"
+                  class="field-error"
+                  aria-live="polite"
+                ></span>
+              </label>
+
+              <label class="field">
+                <span>Asunto</span>
+                <input
+                  id="subject"
+                  name="subject"
+                  type="text"
+                  placeholder="Asunto del correo"
+                  maxlength="200"
+                  required
+                />
+              </label>
+
+              <label class="field">
+                <span>Mensaje</span>
+                <textarea
+                  id="message"
+                  name="message"
+                  rows="10"
+                  placeholder="Escribe aquí el contenido que recibirá cada destinatario…"
+                  maxlength="200000"
+                  required
+                ></textarea>
+                <small id="content-hint">
+                  Se enviará como texto plano. No se añade seguimiento de
+                  aperturas.
+                </small>
+              </label>
+
+              <div class="compose-row">
+                <label class="file-picker">
+                  <input
+                    id="attachments"
+                    name="attachments"
+                    type="file"
+                    multiple
+                  />
+                  <span class="file-icon" aria-hidden="true">＋</span>
+                  <span>
+                    <strong>Adjuntar archivos</strong>
+                    <small id="file-summary">Ningún archivo seleccionado</small>
+                  </span>
+                </label>
+
+                <label class="field delay-field">
+                  <span>Intervalo entre envíos</span>
+                  <span class="number-suffix">
+                    <input
+                      id="delay-ms"
+                      name="delayMs"
+                      type="number"
+                      inputmode="numeric"
+                      min="0"
+                      max="10000"
+                      step="100"
+                      value="500"
+                      required
+                    />
+                    <span>ms</span>
+                  </span>
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <div class="primary-actions">
+            <button id="clear-form" class="button button--quiet" type="button">
+              Limpiar formulario
+            </button>
+            <button
+              id="send-mails"
+              class="button button--primary"
+              type="submit"
+            >
+              <span class="button-spinner" aria-hidden="true"></span>
+              <span>Enviar correos</span>
+            </button>
+          </div>
+        </div>
+
+        <aside class="manifest" aria-labelledby="manifest-title">
+          <div class="manifest-rail" aria-hidden="true"></div>
+          <div class="manifest-header">
+            <div>
+              <p class="manifest-code">SMTP / OUTBOX</p>
+              <h2 id="manifest-title">Manifiesto</h2>
+            </div>
+            <span id="operation-state" class="status-chip status-chip--idle"
+              >Sin iniciar</span
+            >
+          </div>
+
+          <div class="progress-track" aria-label="Progreso del envío">
+            <span id="progress-bar"></span>
+          </div>
+
+          <dl class="metrics">
+            <div>
+              <dt>Total</dt>
+              <dd id="metric-total">0</dd>
+            </div>
+            <div>
+              <dt>Pendientes</dt>
+              <dd id="metric-pending">0</dd>
+            </div>
+            <div>
+              <dt>Enviados</dt>
+              <dd id="metric-sent">0</dd>
+            </div>
+            <div>
+              <dt>Errores</dt>
+              <dd id="metric-errors">0</dd>
+            </div>
+          </dl>
+
+          <div id="empty-results" class="empty-results">
+            <span aria-hidden="true">↗</span>
+          </div>
+
+          <ol id="result-list" class="result-list" aria-live="polite"></ol>
+
+          <div class="manifest-actions">
+            <button
+              id="cancel-send"
+              class="button button--danger"
+              type="button"
+              disabled
+            >
+              Cancelar pendientes
+            </button>
+            <button
+              id="download-csv"
+              class="button button--secondary"
+              type="button"
+              disabled
+            >
+              Descargar CSV
+            </button>
+          </div>
+        </aside>
+      </form>
+    </main>
+
+    <dialog id="confirm-dialog" class="confirm-dialog">
+      <form method="dialog">
+        <span class="dialog-mark" aria-hidden="true">→</span>
+        <p class="step-label">Confirmación</p>
+        <p>
+          Se enviarán <strong id="confirm-count">0</strong> correos
+          independientes. Cada destinatario verá únicamente su propia dirección.
+        </p>
+        <div class="dialog-actions">
+          <button class="button button--quiet" value="cancel">Volver</button>
+          <button class="button button--primary" value="confirm">
+            Sí, enviar
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
