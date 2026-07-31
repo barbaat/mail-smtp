@@ -20,6 +20,12 @@ test('la aplicación Express se construye con las rutas y límites configurados'
   assert.ok(app._router.stack.some((layer) => layer.regexp?.toString().includes('api')));
 });
 
+test('la entrada serverless de Vercel exporta la aplicación Express', () => {
+  const handler = require('../api');
+
+  assert.equal(typeof handler, 'function');
+});
+
 test('la página principal referencia sus recursos y controles críticos', () => {
   const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
 
