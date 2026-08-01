@@ -21,7 +21,19 @@
           <strong>SMTP</strong>
         </span>
       </a>
-      <button id="logout" class="button button--secondary" type="button">Cerrar sesión</button>
+      <div class="header-actions">
+        <button
+          id="open-manifest"
+          class="button button--secondary"
+          type="button"
+          aria-haspopup="dialog"
+          aria-controls="manifest-dialog"
+        >
+          <span aria-hidden="true">↗</span>
+          <span>Manifiesto</span>
+        </button>
+        <button id="logout" class="button button--quiet" type="button">Salir</button>
+      </div>
     </header>
 
     <main class="page-shell">
@@ -243,8 +255,10 @@
                   type="text"
                   placeholder="Asunto del correo"
                   maxlength="200"
+                  aria-describedby="subject-feedback"
                   required
                 />
+                <span id="subject-feedback" class="field-error" aria-live="polite"></span>
               </label>
 
               <label class="field">
@@ -255,12 +269,14 @@
                   rows="10"
                   placeholder="Escribe aquí el contenido que recibirá cada destinatario…"
                   maxlength="200000"
+                  aria-describedby="content-hint message-feedback"
                   required
                 ></textarea>
                 <small id="content-hint">
                   Se enviará como texto plano. No se añade seguimiento de
                   aperturas.
                 </small>
+                <span id="message-feedback" class="field-error" aria-live="polite"></span>
               </label>
 
               <div class="compose-row">
@@ -314,68 +330,79 @@
           </div>
         </div>
 
-        <aside class="manifest" aria-labelledby="manifest-title">
-          <div class="manifest-rail" aria-hidden="true"></div>
-          <div class="manifest-header">
-            <div>
-              <p class="manifest-code">SMTP / OUTBOX</p>
-              <h2 id="manifest-title">Manifiesto</h2>
-            </div>
-            <span id="operation-state" class="status-chip status-chip--idle"
-              >Sin iniciar</span
-            >
-          </div>
-
-          <div class="progress-track" aria-label="Progreso del envío">
-            <span id="progress-bar"></span>
-          </div>
-
-          <dl class="metrics">
-            <div>
-              <dt>Total</dt>
-              <dd id="metric-total">0</dd>
-            </div>
-            <div>
-              <dt>Pendientes</dt>
-              <dd id="metric-pending">0</dd>
-            </div>
-            <div>
-              <dt>Enviados</dt>
-              <dd id="metric-sent">0</dd>
-            </div>
-            <div>
-              <dt>Errores</dt>
-              <dd id="metric-errors">0</dd>
-            </div>
-          </dl>
-
-          <div id="empty-results" class="empty-results">
-            <span aria-hidden="true">↗</span>
-          </div>
-
-          <ol id="result-list" class="result-list" aria-live="polite"></ol>
-
-          <div class="manifest-actions">
-            <button
-              id="cancel-send"
-              class="button button--danger"
-              type="button"
-              disabled
-            >
-              Cancelar pendientes
-            </button>
-            <button
-              id="download-csv"
-              class="button button--secondary"
-              type="button"
-              disabled
-            >
-              Descargar CSV
-            </button>
-          </div>
-        </aside>
       </form>
     </main>
+
+    <dialog id="manifest-dialog" class="manifest-dialog" aria-labelledby="manifest-title">
+      <section class="manifest">
+        <div class="manifest-rail" aria-hidden="true"></div>
+        <div class="manifest-header">
+          <div>
+            <p class="manifest-code">SMTP / OUTBOX</p>
+            <h2 id="manifest-title">Manifiesto</h2>
+          </div>
+          <div class="manifest-header-actions">
+            <span id="operation-state" class="status-chip status-chip--idle">Sin iniciar</span>
+            <button
+              id="close-manifest"
+              class="manifest-close"
+              type="button"
+              aria-label="Cerrar manifiesto"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+
+        <div class="progress-track" aria-label="Progreso del envío">
+          <span id="progress-bar"></span>
+        </div>
+
+        <dl class="metrics">
+          <div>
+            <dt>Total</dt>
+            <dd id="metric-total">0</dd>
+          </div>
+          <div>
+            <dt>Pendientes</dt>
+            <dd id="metric-pending">0</dd>
+          </div>
+          <div>
+            <dt>Enviados</dt>
+            <dd id="metric-sent">0</dd>
+          </div>
+          <div>
+            <dt>Errores</dt>
+            <dd id="metric-errors">0</dd>
+          </div>
+        </dl>
+
+        <div id="empty-results" class="empty-results">
+          <span aria-hidden="true">↗</span>
+        </div>
+
+        <ol id="result-list" class="result-list" aria-live="polite"></ol>
+
+        <div class="manifest-actions">
+          <button
+            id="cancel-send"
+            class="button button--danger"
+            type="button"
+            disabled
+          >
+            Cancelar pendientes
+          </button>
+          <button
+            id="download-csv"
+            class="button button--secondary"
+            type="button"
+            disabled
+          >
+            Descargar CSV
+          </button>
+        </div>
+      </section>
+    </dialog>
 
     <dialog id="confirm-dialog" class="confirm-dialog">
       <form method="dialog">

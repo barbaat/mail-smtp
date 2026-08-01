@@ -13,7 +13,9 @@ const elements = {
   addRecipient: document.querySelector('#add-recipient'),
   recipientLimit: document.querySelector('#recipient-limit'),
   subject: document.querySelector('#subject'),
+  subjectFeedback: document.querySelector('#subject-feedback'),
   message: document.querySelector('#message'),
+  messageFeedback: document.querySelector('#message-feedback'),
   attachments: document.querySelector('#attachments'),
   delayMs: document.querySelector('#delay-ms'),
   recipientCount: document.querySelector('#recipient-count'),
@@ -34,6 +36,9 @@ const elements = {
   metricPending: document.querySelector('#metric-pending'),
   metricSent: document.querySelector('#metric-sent'),
   metricErrors: document.querySelector('#metric-errors'),
+  manifestDialog: document.querySelector('#manifest-dialog'),
+  openManifest: document.querySelector('#open-manifest'),
+  closeManifest: document.querySelector('#close-manifest'),
   confirmDialog: document.querySelector('#confirm-dialog'),
   confirmCount: document.querySelector('#confirm-count'),
   toast: document.querySelector('#toast'),
@@ -228,11 +233,40 @@ function validateSmtpFields() {
   );
 }
 
+function hasVisibleText(value) {
+  return String(value || '').replace(/[\s\u200B-\u200D\uFEFF]/g, '').length > 0;
+}
+
+function validateMessageFields() {
+  const subjectIsValid = hasVisibleText(elements.subject.value);
+  const isHtml = form.elements.contentType.value === 'html';
+  const messageText = isHtml
+    ? new DOMParser().parseFromString(elements.message.value, 'text/html').body.textContent
+    : elements.message.value;
+  const messageIsValid = hasVisibleText(messageText);
+
+  elements.subject.setCustomValidity(subjectIsValid ? '' : 'Introduce un asunto.');
+  elements.message.setCustomValidity(messageIsValid ? '' : 'Escribe el cuerpo del correo.');
+  elements.subject.setAttribute('aria-invalid', String(!subjectIsValid));
+  elements.message.setAttribute('aria-invalid', String(!messageIsValid));
+  elements.subjectFeedback.textContent = subjectIsValid ? '' : 'Introduce un asunto.';
+  elements.messageFeedback.textContent = messageIsValid ? '' : 'Escribe el cuerpo del correo.';
+
+  return subjectIsValid && messageIsValid;
+}
+
+function clearMessageFieldError(input, feedback) {
+  input.setCustomValidity('');
+  input.removeAttribute('aria-invalid');
+  feedback.textContent = '';
+}
+
 function validateBeforeSend() {
   const recipientInputs = getRecipientInputs();
   recipientInputs.forEach((input) => input.setCustomValidity(''));
   const parsed = updateRecipientCount();
-  validateSmtpFields();
+  const smtpFieldsAreValid = validateSmtpFields();
+  const messageFieldsAreValid = validateMessageFields();
 
   if (parsed.invalid.length) {
     const invalidKeys = new Set(parsed.invalid.map((address) => address.toLowerCase()));
@@ -261,7 +295,7 @@ function validateBeforeSend() {
     return null;
   }
 
-  if (!validateSmtpFields() || !form.checkValidity()) {
+  if (!smtpFieldsAreValid || !messageFieldsAreValid || !form.checkValidity()) {
     form.reportValidity();
     return null;
   }
@@ -410,6 +444,10 @@ function askForConfirmation(count) {
   });
 }
 
+function openManifest() {
+  if (!elements.manifestDialog.open) elements.manifestDialog.showModal();
+}
+
 async function testSmtp() {
   const smtpIsValid = validateSmtpFields();
   if (
@@ -462,6 +500,7 @@ async function startSend(event) {
   setOperationState('Preparando', 'sending');
   updateSummary({ total: recipients.length, pending: recipients.length, sent: 0, errors: 0 });
   renderResults();
+  openManifest();
 
   const payload = new FormData();
   payload.set('smtpConfig', JSON.stringify(collectSmtpConfig()));
@@ -543,6 +582,8 @@ function resetForm() {
   if (state.sending) return;
   form.reset();
   resetRecipientFields();
+  clearMessageFieldError(elements.subject, elements.subjectFeedback);
+  clearMessageFieldError(elements.message, elements.messageFeedback);
   applyPreset('gmail');
   elements.fileSummary.textContent = 'Ningún archivo seleccionado';
   elements.smtpFeedback.className = 'inline-feedback';
@@ -599,6 +640,12 @@ document.querySelectorAll('input[name="contentType"]').forEach((input) => {
         : 'Se enviará como texto plano. No se añade seguimiento de aperturas.';
   });
 });
+elements.subject.addEventListener('input', () => {
+  clearMessageFieldError(elements.subject, elements.subjectFeedback);
+});
+elements.message.addEventListener('input', () => {
+  clearMessageFieldError(elements.message, elements.messageFeedback);
+});
 elements.addRecipient.addEventListener('click', () => addRecipient());
 elements.recipientList.addEventListener('input', (event) => {
   if (!event.target.classList.contains('recipient-input')) return;
@@ -646,6 +693,17 @@ elements.logout.addEventListener('click', async () => {
   } finally {
     window.location.replace('/login');
   }
+});
+elements.openManifest.addEventListener('click', openManifest);
+elements.closeManifest.addEventListener('click', () => elements.manifestDialog.close());
+elements.manifestDialog.addEventListener('click', (event) => {
+  const bounds = elements.manifestDialog.getBoundingClientRect();
+  const outside =
+    event.clientX < bounds.left ||
+    event.clientX > bounds.right ||
+    event.clientY < bounds.top ||
+    event.clientY > bounds.bottom;
+  if (outside) elements.manifestDialog.close();
 });
 elements.testButton.addEventListener('click', testSmtp);
 elements.cancelButton.addEventListener('click', cancelSend);

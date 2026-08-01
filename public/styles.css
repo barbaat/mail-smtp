@@ -69,6 +69,12 @@ select {
   backdrop-filter: blur(12px);
 }
 
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .brand {
   display: inline-flex;
   gap: 12px;
@@ -626,7 +632,8 @@ textarea:invalid:not(:placeholder-shown) {
 
 .button:focus-visible,
 .preset-button:focus-visible,
-.recipient-remove:focus-visible {
+.recipient-remove:focus-visible,
+.manifest-close:focus-visible {
   outline: 3px solid rgb(40 86 232 / 24%);
   outline-offset: 2px;
 }
@@ -738,10 +745,45 @@ textarea:invalid:not(:placeholder-shown) {
 
 .manifest {
   position: relative;
-  grid-column: 1 / -1;
   overflow: hidden;
-  min-height: 460px;
+  min-height: min(540px, calc(100dvh - 120px));
   padding: 28px 25px 24px 39px;
+}
+
+.manifest-dialog {
+  position: fixed;
+  inset: clamp(72px, 8vh, 108px) 0 auto;
+  width: min(1120px, calc(100% - 40px));
+  max-height: calc(100dvh - 96px);
+  margin: 0 auto;
+  padding: 0;
+  overflow: auto;
+  color: var(--ink);
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  box-shadow: 0 32px 90px rgb(14 29 53 / 24%);
+}
+
+.manifest-dialog::backdrop {
+  background: rgb(20 32 51 / 28%);
+  backdrop-filter: blur(2px);
+}
+
+.manifest-dialog[open] {
+  animation: manifest-enter 180ms ease-out;
+}
+
+@keyframes manifest-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .manifest-rail {
@@ -767,6 +809,32 @@ textarea:invalid:not(:placeholder-shown) {
   gap: 12px;
   align-items: flex-start;
   justify-content: space-between;
+}
+
+.manifest-header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.manifest-close {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  place-items: center;
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.manifest-close:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+  background: var(--paper);
 }
 
 .manifest-code {
@@ -1086,6 +1154,16 @@ textarea:invalid:not(:placeholder-shown) {
     padding-inline: 16px;
   }
 
+  .header-actions {
+    gap: 4px;
+  }
+
+  .header-actions .button {
+    min-height: 39px;
+    padding-inline: 10px;
+    font-size: 0.7rem;
+  }
+
   .security-notice {
     align-items: flex-start;
     padding-inline: 16px;
@@ -1145,7 +1223,14 @@ textarea:invalid:not(:placeholder-shown) {
   }
 
   .manifest {
+    min-height: calc(100dvh - 32px);
     padding: 24px 17px 20px 31px;
+  }
+
+  .manifest-dialog {
+    inset: 16px 0 auto;
+    width: calc(100% - 24px);
+    max-height: calc(100dvh - 32px);
   }
 
   .metrics dt {
