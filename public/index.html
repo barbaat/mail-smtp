@@ -30,9 +30,11 @@
           aria-controls="manifest-dialog"
         >
           <span aria-hidden="true">↗</span>
-          <span>Manifiesto</span>
+          <span>Envío</span>
         </button>
-        <button id="logout" class="button button--quiet" type="button">Salir</button>
+        <button id="logout" class="button button--quiet" type="button">
+          Salir
+        </button>
       </div>
     </header>
 
@@ -122,7 +124,11 @@
               </label>
               <div class="field field--full">
                 <span>Contraseña SMTP</span>
-                <span id="smtp-password-status" class="secret-status" role="status">
+                <span
+                  id="smtp-password-status"
+                  class="secret-status"
+                  role="status"
+                >
                   Comprobando variable del servidor…
                 </span>
               </div>
@@ -237,7 +243,8 @@
                     <span>Añadir correo</span>
                   </button>
                   <small id="recipient-limit">
-                    Pega una lista separada por comas, punto y coma, espacios o saltos. Máximo 100.
+                    Pega una lista separada por comas, punto y coma, espacios o
+                    saltos. Máximo 100.
                   </small>
                 </div>
                 <span
@@ -258,7 +265,11 @@
                   aria-describedby="subject-feedback"
                   required
                 />
-                <span id="subject-feedback" class="field-error" aria-live="polite"></span>
+                <span
+                  id="subject-feedback"
+                  class="field-error"
+                  aria-live="polite"
+                ></span>
               </label>
 
               <label class="field">
@@ -276,7 +287,11 @@
                   Se enviará como texto plano. No se añade seguimiento de
                   aperturas.
                 </small>
-                <span id="message-feedback" class="field-error" aria-live="polite"></span>
+                <span
+                  id="message-feedback"
+                  class="field-error"
+                  aria-live="polite"
+                ></span>
               </label>
 
               <div class="compose-row">
@@ -329,25 +344,30 @@
             </button>
           </div>
         </div>
-
       </form>
     </main>
 
-    <dialog id="manifest-dialog" class="manifest-dialog" aria-labelledby="manifest-title">
+    <dialog
+      id="manifest-dialog"
+      class="manifest-dialog"
+      aria-labelledby="manifest-title"
+    >
       <section class="manifest">
         <div class="manifest-rail" aria-hidden="true"></div>
         <div class="manifest-header">
           <div>
             <p class="manifest-code">SMTP / OUTBOX</p>
-            <h2 id="manifest-title">Manifiesto</h2>
+            <h2 id="manifest-title">Envío</h2>
           </div>
           <div class="manifest-header-actions">
-            <span id="operation-state" class="status-chip status-chip--idle">Sin iniciar</span>
+            <span id="operation-state" class="status-chip status-chip--idle"
+              >Sin iniciar</span
+            >
             <button
               id="close-manifest"
               class="manifest-close"
               type="button"
-              aria-label="Cerrar manifiesto"
+              aria-label="Cerrar panel de envío"
             >
               ×
             </button>

@@ -66,7 +66,7 @@ valores reales. La contraseña SMTP nunca se envía al navegador.
    enviar.
 6. Completa asunto, mensaje, formato y adjuntos.
 7. Confirma el número de destinatarios y comienza el envío.
-8. Revisa el manifiesto o descarga el resultado en CSV.
+8. Revisa el envío o descarga el resultado en CSV.
 
 Haz primero una prueba con una sola dirección que controles.
 
