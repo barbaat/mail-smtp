@@ -4,7 +4,12 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { createApp } = require('../server');
+const serverEntry = require('../server');
+const { createApp } = serverEntry;
+
+test('la entrada principal exporta directamente la aplicación Express', () => {
+  assert.equal(typeof serverEntry, 'function');
+});
 
 test('la aplicación Express se construye con las rutas y límites configurados', () => {
   const app = createApp({

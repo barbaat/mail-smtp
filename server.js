@@ -82,11 +82,12 @@ function createApp(config = getRuntimeConfig()) {
   return app;
 }
 
+const app = createApp(getRuntimeConfig());
+
 if (require.main === module) {
-  const config = getRuntimeConfig();
-  const app = createApp(config);
-  const server = app.listen(config.port, config.host, () => {
-    console.log(`SMTP Mailer disponible en http://${config.host}:${config.port}`);
+  const { host, port } = getRuntimeConfig();
+  const server = app.listen(port, host, () => {
+    console.log(`SMTP Mailer disponible en http://${host}:${port}`);
   });
   server.on('error', (error) => {
     console.error(`No se pudo iniciar el servidor HTTP (${error.code || 'ERROR'}).`);
@@ -94,4 +95,6 @@ if (require.main === module) {
   });
 }
 
-module.exports = { createApp, getRuntimeConfig };
+module.exports = app;
+module.exports.createApp = createApp;
+module.exports.getRuntimeConfig = getRuntimeConfig;
