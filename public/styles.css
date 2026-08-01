@@ -311,11 +311,23 @@ select {
 }
 
 .field-grid--smtp {
-  grid-template-columns: minmax(180px, 1.4fr) minmax(110px, 0.6fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.field-grid--smtp .field:nth-child(n + 3) {
-  grid-column: auto;
+.field-grid--smtp .field {
+  grid-column: span 2;
+}
+
+.field-grid--smtp .field--wide {
+  grid-column: span 3;
+}
+
+.field-grid--smtp .field--compact {
+  grid-column: span 1;
+}
+
+.field-grid--smtp .field--full {
+  grid-column: 1 / -1;
 }
 
 .field-stack {
@@ -908,6 +920,10 @@ textarea:invalid:not(:placeholder-shown) {
 @media (max-width: 1080px) {
   .field-grid--smtp {
     grid-template-columns: 1fr;
+  }
+
+  .field-grid--smtp .field {
+    grid-column: auto;
   }
 
   .panel-heading {

@@ -19,33 +19,11 @@
         </span>
         <span>
           <strong>SMTP</strong>
-          <small>entrega individual</small>
         </span>
       </a>
-      <p class="header-note">Un destinatario por conexión. Sin CC ni CCO.</p>
     </header>
 
-    <div class="security-notice" role="note">
-      <span aria-hidden="true">●</span>
-      <p>
-        Las credenciales no se guardan. Si publicas esta aplicación, protégela
-        siempre con
-        <strong>HTTPS</strong>, autenticación y acceso restringido.
-      </p>
-    </div>
-
     <main class="page-shell">
-      <section class="intro" aria-labelledby="page-title">
-        <p class="eyebrow">Mesa de salida</p>
-        <h1 id="page-title">
-          El mismo correo. <em>Cada entrega, privada.</em>
-        </h1>
-        <p class="intro-copy">
-          Prepara el servidor, compón el mensaje y revisa el manifiesto mientras
-          cada correo sale por separado.
-        </p>
-      </section>
-
       <form id="mail-form" class="workspace" novalidate>
         <div class="form-column">
           <section class="panel" aria-labelledby="smtp-title">
@@ -93,7 +71,7 @@
                   required
                 />
               </label>
-              <label class="field">
+              <label class="field field--compact">
                 <span>Puerto</span>
                 <input
                   id="smtp-port"
@@ -128,7 +106,7 @@
                   maxlength="320"
                 />
               </label>
-              <label class="field">
+              <label class="field field--full">
                 <span>Contraseña SMTP</span>
                 <span class="password-control">
                   <input
