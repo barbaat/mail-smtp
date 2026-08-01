@@ -35,7 +35,10 @@ function friendlySmtpError(error) {
   if (code === 'EAUTH' || responseCode === 535) {
     return 'Autenticación rechazada. Revisa el usuario, la contraseña o la contraseña de aplicación.';
   }
-  if (['ECONNECTION', 'ECONNREFUSED', 'ETIMEDOUT', 'ESOCKET'].includes(code)) {
+  if (code === 'ETIMEDOUT') {
+    return 'La prueba SMTP superó el tiempo máximo. Revisa el servidor, el puerto y la red.';
+  }
+  if (['ECONNECTION', 'ECONNREFUSED', 'ESOCKET'].includes(code)) {
     return 'No se pudo conectar con el servidor SMTP.';
   }
   if (responseCode === 550 || responseCode === 551 || responseCode === 553) {
@@ -49,11 +52,22 @@ function friendlySmtpError(error) {
   return 'El servidor SMTP no pudo completar el envío.';
 }
 
-async function verifyConnection(smtpConfig) {
+async function verifyConnection(smtpConfig, timeoutMs = 15_000) {
   const transporter = createTransporter(smtpConfig);
+  let timeoutId;
   try {
-    await transporter.verify();
+    await Promise.race([
+      transporter.verify(),
+      new Promise((_, reject) => {
+        timeoutId = setTimeout(() => {
+          const error = new Error('SMTP verification timed out');
+          error.code = 'ETIMEDOUT';
+          reject(error);
+        }, timeoutMs);
+      })
+    ]);
   } finally {
+    clearTimeout(timeoutId);
     transporter.close();
   }
 }

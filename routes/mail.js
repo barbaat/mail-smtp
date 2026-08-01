@@ -68,14 +68,26 @@ function createMailRouter(config) {
   }
 
   router.post('/test-smtp', async (req, res) => {
+    const startedAt = Date.now();
     try {
       const smtpConfig = validateSmtpConfig(req.body.smtpConfig || req.body, config.smtpPassword);
+      console.info('[smtp:test] started', {
+        host: smtpConfig.host,
+        port: smtpConfig.port,
+        security: smtpConfig.security
+      });
       await verifyConnection(smtpConfig);
+      console.info('[smtp:test] completed', { durationMs: Date.now() - startedAt });
       return res.json({ ok: true, message: 'Conexión SMTP verificada correctamente.' });
     } catch (error) {
       if (error instanceof ValidationError) {
         return res.status(400).json({ ok: false, error: error.message, details: error.details });
       }
+      console.error('[smtp:test] failed', {
+        code: String(error?.code || 'UNKNOWN'),
+        responseCode: Number(error?.responseCode) || null,
+        durationMs: Date.now() - startedAt
+      });
       return res.status(502).json({ ok: false, error: friendlySmtpError(error) });
     }
   });

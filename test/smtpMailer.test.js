@@ -47,6 +47,26 @@ test('verifyConnection ejecuta transporter.verify() y cierra el transporte', asy
   assert.equal(closeCalls, 1);
 });
 
+test('verifyConnection corta una comprobación SMTP bloqueada', async (context) => {
+  let closeCalls = 0;
+  const originalCreateTransport = nodemailer.createTransport;
+
+  nodemailer.createTransport = () => ({
+    verify() {
+      return new Promise(() => {});
+    },
+    close() {
+      closeCalls += 1;
+    }
+  });
+  context.after(() => {
+    nodemailer.createTransport = originalCreateTransport;
+  });
+
+  await assert.rejects(verifyConnection(smtpConfig, 10), { code: 'ETIMEDOUT' });
+  assert.equal(closeCalls, 1);
+});
+
 test('envía una operación independiente por destinatario y continúa tras un error', async (context) => {
   const messages = [];
   const events = [];

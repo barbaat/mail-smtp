@@ -466,22 +466,35 @@ async function testSmtp() {
   setButtonLoading(elements.testButton, true);
   elements.smtpFeedback.className = 'inline-feedback';
   elements.smtpFeedback.textContent = 'Comprobando conexión…';
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), 20_000);
 
   try {
     const response = await fetch('/api/test-smtp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ smtpConfig: collectSmtpConfig() })
+      body: JSON.stringify({ smtpConfig: collectSmtpConfig() }),
+      signal: controller.signal
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error([data.error, ...(data.details || [])].join(' '));
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(
+        [data.error || `El servidor respondió con estado ${response.status}.`, ...(data.details || [])]
+          .filter(Boolean)
+          .join(' ')
+      );
+    }
 
     elements.smtpFeedback.className = 'inline-feedback is-success';
     elements.smtpFeedback.textContent = data.message;
   } catch (error) {
     elements.smtpFeedback.className = 'inline-feedback is-error';
-    elements.smtpFeedback.textContent = error.message || 'No se pudo comprobar la conexión.';
+    elements.smtpFeedback.textContent =
+      error.name === 'AbortError'
+        ? 'La prueba tardó demasiado. Revisa el servidor SMTP, el puerto y la red.'
+        : error.message || 'No se pudo comprobar la conexión.';
   } finally {
+    window.clearTimeout(timeoutId);
     setButtonLoading(elements.testButton, false);
   }
 }
