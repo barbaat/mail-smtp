@@ -5,7 +5,7 @@ const validator = require('validator');
 const MAX_ADDRESS_LENGTH = 254;
 
 function normalizeRecipients(input) {
-  const rawValues = Array.isArray(input) ? input : String(input || '').split(/[\n,;]+/);
+  const rawValues = Array.isArray(input) ? input : String(input || '').split(/[\s,;]+/);
   const valid = [];
   const invalid = [];
   const seen = new Set();

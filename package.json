@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "check": "node --check server.js && node --check api/index.js && node --check routes/mail.js && node --check services/smtpMailer.js && node --check utils/recipients.js && node --check utils/validation.js && node --check public/app.js",
+    "check": "node --check server.js && node --check api/index.js && node --check routes/mail.js && node --check services/smtpMailer.js && node --check utils/auth.js && node --check utils/recipients.js && node --check utils/validation.js && node --check public/app.js && node --check public/login.js",
     "test": "node --test"
   },
   "engines": {

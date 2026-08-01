@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Acceso protegido a SMTP." />
+    <title>Acceso · SMTP</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/login.js" defer></script>
+  </head>
+  <body class="login-page">
+    <main class="login-shell">
+      <section class="login-card" aria-labelledby="login-title">
+        <span class="brand-mark" aria-hidden="true"><span></span></span>
+        <p class="step-label">Acceso protegido</p>
+        <h1 id="login-title">Entrar en SMTP</h1>
+        <p>Introduce la contraseña de acceso configurada para esta web.</p>
+
+        <form id="login-form" class="login-form">
+          <label class="field">
+            <span>Contraseña</span>
+            <input
+              id="web-password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              maxlength="1024"
+              required
+              autofocus
+            />
+          </label>
+          <p id="login-error" class="inline-feedback is-error" role="alert"></p>
+          <button class="button button--primary" type="submit">
+            <span class="button-spinner" aria-hidden="true"></span>
+            <span>Entrar</span>
+          </button>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>

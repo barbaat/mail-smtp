@@ -6,10 +6,15 @@ const { normalizeRecipients } = require('../utils/recipients');
 
 test('normaliza separadores, elimina duplicados y conserva direcciones válidas', () => {
   const result = normalizeRecipients(
-    ' ana@example.com,\nLUIS@example.com; ana@example.com ; luis@EXAMPLE.com '
+    ' ana@example.com,\nLUIS@example.com; uno@example.com dos@example.com; luis@EXAMPLE.com '
   );
 
-  assert.deepEqual(result.valid, ['ana@example.com', 'LUIS@example.com']);
+  assert.deepEqual(result.valid, [
+    'ana@example.com',
+    'LUIS@example.com',
+    'uno@example.com',
+    'dos@example.com'
+  ]);
   assert.deepEqual(result.invalid, []);
 });
 

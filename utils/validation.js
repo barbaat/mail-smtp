@@ -73,13 +73,13 @@ class ValidationError extends Error {
   }
 }
 
-function validateSmtpConfig(input) {
+function validateSmtpConfig(input, serverPassword = '') {
   const smtp = parseJsonField(input, 'smtpConfig');
   const host = cleanSingleLine(smtp.host, 253);
   const port = Number.parseInt(smtp.port, 10);
   const security = cleanSingleLine(smtp.security, 16).toLowerCase();
   const username = cleanSingleLine(smtp.username, 320);
-  const password = String(smtp.password ?? '').slice(0, 1_024);
+  const password = String(serverPassword).slice(0, 1_024);
   const errors = [];
 
   const isHostValid =
@@ -92,9 +92,8 @@ function validateSmtpConfig(input) {
     errors.push('El puerto SMTP debe estar entre 1 y 65535.');
   }
   if (!SECURITY_MODES.has(security)) errors.push('Selecciona un tipo de seguridad válido.');
-  if (Boolean(username) !== Boolean(password)) {
-    errors.push('El usuario y la contraseña SMTP deben indicarse juntos.');
-  }
+  if (!username) errors.push('Introduce el usuario SMTP.');
+  if (!password) errors.push('Configura SMTP_PASSWORD en el servidor.');
   if (password.includes('\u0000')) errors.push('La contraseña SMTP contiene caracteres no válidos.');
 
   if (errors.length) throw new ValidationError('Revisa la configuración SMTP.', errors);

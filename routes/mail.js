@@ -69,7 +69,7 @@ function createMailRouter(config) {
 
   router.post('/test-smtp', async (req, res) => {
     try {
-      const smtpConfig = validateSmtpConfig(req.body.smtpConfig || req.body);
+      const smtpConfig = validateSmtpConfig(req.body.smtpConfig || req.body, config.smtpPassword);
       await verifyConnection(smtpConfig);
       return res.json({ ok: true, message: 'Conexión SMTP verificada correctamente.' });
     } catch (error) {
@@ -104,7 +104,7 @@ function createMailRouter(config) {
       let mailData;
 
       try {
-        smtpConfig = validateSmtpConfig(req.body.smtpConfig);
+        smtpConfig = validateSmtpConfig(req.body.smtpConfig, config.smtpPassword);
         mailData = validateMessagePayload(req.body, config.maxRecipients, config.sendDelayMs);
       } catch (error) {
         if (error instanceof ValidationError) {

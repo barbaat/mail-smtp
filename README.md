@@ -40,9 +40,12 @@ cp .env.example .env
 | `MAX_RECIPIENTS`   |         `100` | Máximo de destinatarios por operación.                              |
 | `SEND_DELAY_MS`    |         `500` | Pausa predeterminada entre envíos.                                  |
 | `MAX_FILE_SIZE_MB` |          `10` | Tamaño máximo por archivo adjunto.                                  |
+| `SMTP_PASSWORD`    |             — | Contraseña o clave de aplicación SMTP; solo existe en el servidor.  |
+| `WEB_PASSWORD`     |             — | Contraseña necesaria para acceder a la aplicación.                  |
 
-Se permiten hasta cinco adjuntos por operación. Las credenciales SMTP se introducen en la interfaz:
-no se escriben en `.env`, archivos, base de datos, `localStorage` ni registros del servidor.
+`SMTP_PASSWORD` y `WEB_PASSWORD` son obligatorias. En producción, añádelas como variables cifradas
+en Vercel y vuelve a desplegar. No uses el prefijo `NEXT_PUBLIC_` ni confirmes archivos `.env` con
+valores reales. La contraseña SMTP nunca se envía al navegador.
 
 ### Configuraciones rápidas
 
@@ -54,14 +57,16 @@ no se escriben en `.env`, archivos, base de datos, `localStorage` ni registros d
 
 ## Ejemplo de uso
 
-1. Introduce servidor, puerto, seguridad y credenciales SMTP.
-2. Añade el nombre y correo del remitente.
-3. Pulsa **Probar conexión SMTP**.
-4. Escribe destinatarios separados por saltos de línea, comas o punto y coma. Los duplicados se
-   eliminan sin distinguir mayúsculas.
-5. Completa asunto, mensaje, formato y adjuntos.
-6. Confirma el número de destinatarios y comienza el envío.
-7. Revisa el manifiesto o descarga el resultado en CSV.
+1. Inicia sesión con `WEB_PASSWORD`.
+2. Introduce servidor, puerto, seguridad y usuario SMTP. La contraseña se toma de `SMTP_PASSWORD`.
+3. Añade el nombre y correo del remitente.
+4. Pulsa **Probar conexión SMTP**.
+5. Añade cada destinatario con **Añadir correo** o pega una lista separada por comas, punto y coma,
+   espacios o saltos de línea. Se creará un campo por dirección y se eliminarán los duplicados al
+   enviar.
+6. Completa asunto, mensaje, formato y adjuntos.
+7. Confirma el número de destinatarios y comienza el envío.
+8. Revisa el manifiesto o descarga el resultado en CSV.
 
 Haz primero una prueba con una sola dirección que controles.
 
@@ -89,13 +94,14 @@ Usa la aplicación solo con destinatarios autorizados y respeta la normativa apl
 
 ### `POST /api/test-smtp`
 
-Acepta JSON con `smtpConfig` y ejecuta `transporter.verify()`.
+Acepta JSON con `smtpConfig` y ejecuta `transporter.verify()`. La contraseña siempre se obtiene de
+`SMTP_PASSWORD` en el servidor.
 
 ### `POST /api/send`
 
 Acepta `multipart/form-data` con:
 
-- `smtpConfig`: JSON con `host`, `port`, `security`, `username` y `password`.
+- `smtpConfig`: JSON con `host`, `port`, `security` y `username`.
 - `sender`: JSON con `name` y `email`.
 - `recipients`: lista separada por saltos, comas o punto y coma.
 - `subject`, `content`, `contentType` (`text` o `html`) y `delayMs`.
@@ -112,9 +118,10 @@ termina antes de detener la operación.
 
 ## Seguridad y despliegue
 
-La aplicación incluye Helmet, CSP, límites de petición y archivos, saneado de HTML, validación
-servidor, rate limiting y mensajes de error reducidos. Los adjuntos se mantienen en memoria durante
-la petición y no se guardan en disco. No incorpora píxeles de seguimiento ni enlaces ocultos.
+La aplicación incluye acceso mediante cookie `HttpOnly` con caducidad de 12 horas, limitación de
+intentos de inicio de sesión, Helmet, CSP, límites de petición y archivos, saneado de HTML,
+validación servidor, rate limiting y mensajes de error reducidos. Los adjuntos se mantienen en
+memoria durante la petición y no se guardan en disco.
 
 Si se publica en Internet:
 

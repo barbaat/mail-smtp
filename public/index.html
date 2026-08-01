@@ -21,6 +21,7 @@
           <strong>SMTP</strong>
         </span>
       </a>
+      <button id="logout" class="button button--secondary" type="button">Cerrar sesión</button>
     </header>
 
     <main class="page-shell">
@@ -104,28 +105,15 @@
                   spellcheck="false"
                   placeholder="usuario@ejemplo.com"
                   maxlength="320"
+                  required
                 />
               </label>
-              <label class="field field--full">
+              <div class="field field--full">
                 <span>Contraseña SMTP</span>
-                <span class="password-control">
-                  <input
-                    id="smtp-password"
-                    name="smtpPassword"
-                    type="password"
-                    autocomplete="off"
-                    placeholder="Contraseña o clave de aplicación"
-                    maxlength="1024"
-                  />
-                  <button
-                    id="toggle-password"
-                    type="button"
-                    aria-label="Mostrar contraseña"
-                  >
-                    Mostrar
-                  </button>
+                <span id="smtp-password-status" class="secret-status" role="status">
+                  Comprobando variable del servidor…
                 </span>
-              </label>
+              </div>
               <label class="field">
                 <span>Nombre del remitente</span>
                 <input
@@ -154,7 +142,7 @@
 
             <div class="panel-actions panel-actions--smtp">
               <p id="smtp-feedback" class="inline-feedback" aria-live="polite">
-                Las credenciales permanecen solo en esta sesión del navegador.
+                La contraseña SMTP nunca se envía al navegador.
               </p>
               <button
                 id="test-smtp"
@@ -190,31 +178,62 @@
             </div>
 
             <div class="field-stack">
-              <label class="field">
+              <div class="field">
                 <span class="field-label-row">
                   <span>Destinatarios</span>
                   <span id="recipient-count" class="count-badge"
                     >0 válidos</span
                   >
                 </span>
-                <textarea
-                  id="recipients"
-                  name="recipients"
-                  rows="6"
-                  placeholder="ana@ejemplo.com&#10;luis@ejemplo.com, equipo@ejemplo.com"
-                  spellcheck="false"
-                  required
-                ></textarea>
-                <small
-                  >Separa las direcciones con saltos de línea, comas o punto y
-                  coma.</small
+                <div
+                  id="recipient-list"
+                  class="recipient-list"
+                  role="list"
+                  aria-label="Correos de destinatarios"
                 >
+                  <div class="recipient-row" role="listitem">
+                    <input
+                      id="recipient-1"
+                      class="recipient-input"
+                      name="recipient"
+                      type="email"
+                      inputmode="email"
+                      placeholder="correo@ejemplo.com"
+                      maxlength="254"
+                      autocomplete="off"
+                      spellcheck="false"
+                      aria-label="Correo del destinatario 1"
+                      required
+                    />
+                    <button
+                      class="recipient-remove"
+                      type="button"
+                      aria-label="Eliminar destinatario 1"
+                      disabled
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                </div>
+                <div class="recipient-actions">
+                  <button
+                    id="add-recipient"
+                    class="button button--secondary recipient-add"
+                    type="button"
+                  >
+                    <span aria-hidden="true">＋</span>
+                    <span>Añadir correo</span>
+                  </button>
+                  <small id="recipient-limit">
+                    Pega una lista separada por comas, punto y coma, espacios o saltos. Máximo 100.
+                  </small>
+                </div>
                 <span
                   id="recipient-feedback"
                   class="field-error"
                   aria-live="polite"
                 ></span>
-              </label>
+              </div>
 
               <label class="field">
                 <span>Asunto</span>

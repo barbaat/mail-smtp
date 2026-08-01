@@ -18,7 +18,9 @@ test('la aplicación Express se construye con las rutas y límites configurados'
     maxRecipients: 25,
     sendDelayMs: 200,
     maxFileSizeMb: 2,
-    maxAttachments: 5
+    maxAttachments: 5,
+    smtpPassword: 'smtp-secret',
+    webPassword: 'web-secret'
   });
 
   assert.equal(typeof app, 'function');
@@ -42,12 +44,37 @@ test('la página principal referencia sus recursos y controles críticos', () =>
     'value="465"',
     'value="Francisco Javier Barba Trejo"',
     'value="barbatrejofco@gmail.com"',
-    'id="recipients"',
+    'id="recipient-list"',
+    'class="recipient-input"',
+    'id="add-recipient"',
     'id="test-smtp"',
+    'id="smtp-password-status"',
+    'id="logout"',
     'id="send-mails"',
     'id="cancel-send"',
     'id="download-csv"'
   ]) {
     assert.ok(html.includes(expected), `Falta ${expected}`);
   }
+  assert.ok(!html.includes('id="smtp-password"'));
+});
+
+test('la aplicación registra las rutas de acceso antes del contenido protegido', () => {
+  const app = createApp({
+    host: '127.0.0.1',
+    port: 3000,
+    maxRecipients: 25,
+    sendDelayMs: 200,
+    maxFileSizeMb: 2,
+    maxAttachments: 5,
+    smtpPassword: 'smtp-secret',
+    webPassword: 'web-secret'
+  });
+
+  const routes = app._router.stack
+    .map((layer) => layer.route?.path)
+    .filter(Boolean);
+  assert.ok(routes.includes('/login'));
+  assert.ok(routes.includes('/api/login'));
+  assert.ok(routes.includes('/api/logout'));
 });

@@ -6,10 +6,12 @@ const elements = {
   port: document.querySelector('#smtp-port'),
   security: document.querySelector('#smtp-security'),
   username: document.querySelector('#smtp-user'),
-  password: document.querySelector('#smtp-password'),
+  passwordStatus: document.querySelector('#smtp-password-status'),
   senderName: document.querySelector('#sender-name'),
   senderEmail: document.querySelector('#sender-email'),
-  recipients: document.querySelector('#recipients'),
+  recipientList: document.querySelector('#recipient-list'),
+  addRecipient: document.querySelector('#add-recipient'),
+  recipientLimit: document.querySelector('#recipient-limit'),
   subject: document.querySelector('#subject'),
   message: document.querySelector('#message'),
   attachments: document.querySelector('#attachments'),
@@ -35,7 +37,7 @@ const elements = {
   confirmDialog: document.querySelector('#confirm-dialog'),
   confirmCount: document.querySelector('#confirm-count'),
   toast: document.querySelector('#toast'),
-  togglePassword: document.querySelector('#toggle-password')
+  logout: document.querySelector('#logout')
 };
 
 const presets = {
@@ -49,7 +51,8 @@ const state = {
     maxRecipients: 100,
     sendDelayMs: 500,
     maxFileSizeMb: 10,
-    maxAttachments: 5
+    maxAttachments: 5,
+    smtpPasswordConfigured: false
   },
   activeOperationId: null,
   results: new Map(),
@@ -57,14 +60,23 @@ const state = {
   toastTimer: null
 };
 
+function splitRecipientText(value) {
+  return String(value || '')
+    .split(/[\s,;]+/)
+    .map((address) => address.trim())
+    .filter(Boolean);
+}
+
 function parseRecipients(value) {
   const unique = new Map();
   const invalid = [];
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  const values = Array.isArray(value)
+    ? value.flatMap((address) => splitRecipientText(address))
+    : splitRecipientText(value);
 
-  String(value || '')
-    .split(/[\n,;]+/)
-    .map((address) => address.trim())
+  values
+    .map((address) => String(address || '').trim())
     .filter(Boolean)
     .forEach((address) => {
       const key = address.toLowerCase();
@@ -76,8 +88,116 @@ function parseRecipients(value) {
   return { valid: [...unique.values()], invalid };
 }
 
+function getRecipientInputs() {
+  return [...elements.recipientList.querySelectorAll('.recipient-input')];
+}
+
+function updateRecipientControls() {
+  const rows = [...elements.recipientList.querySelectorAll('.recipient-row')];
+  const lockRows = state.sending || rows.length === 1;
+
+  rows.forEach((row, index) => {
+    const input = row.querySelector('.recipient-input');
+    const removeButton = row.querySelector('.recipient-remove');
+    const number = index + 1;
+    input.id = `recipient-${number}`;
+    input.setAttribute('aria-label', `Correo del destinatario ${number}`);
+    removeButton.disabled = lockRows;
+    removeButton.setAttribute('aria-label', `Eliminar destinatario ${number}`);
+  });
+
+  elements.addRecipient.disabled = state.sending || rows.length >= state.config.maxRecipients;
+}
+
+function createRecipientRow(value = '') {
+  const row = document.createElement('div');
+  row.className = 'recipient-row';
+  row.setAttribute('role', 'listitem');
+
+  const input = document.createElement('input');
+  input.className = 'recipient-input';
+  input.name = 'recipient';
+  input.type = 'email';
+  input.inputMode = 'email';
+  input.placeholder = 'correo@ejemplo.com';
+  input.maxLength = 254;
+  input.autocomplete = 'off';
+  input.spellcheck = false;
+  input.required = true;
+  input.value = value;
+
+  const removeButton = document.createElement('button');
+  removeButton.className = 'recipient-remove';
+  removeButton.type = 'button';
+  removeButton.textContent = 'Quitar';
+
+  row.append(input, removeButton);
+  return row;
+}
+
+function addRecipient(value = '', focus = true) {
+  if (getRecipientInputs().length >= state.config.maxRecipients) {
+    showToast(`Puedes añadir como máximo ${state.config.maxRecipients} destinatarios.`, true);
+    return;
+  }
+
+  const row = createRecipientRow(value);
+  elements.recipientList.append(row);
+  updateRecipientControls();
+  updateRecipientCount();
+  if (focus) row.querySelector('.recipient-input').focus();
+}
+
+function addPastedRecipients(input, text) {
+  const pastedRecipients = splitRecipientText(text);
+  if (pastedRecipients.length < 2) return false;
+
+  const currentValue = input.value.trim();
+  const replacesCurrent =
+    !currentValue || (input.selectionStart === 0 && input.selectionEnd === input.value.length);
+  const pendingRecipients = [...pastedRecipients];
+  let addedCount = 0;
+
+  if (replacesCurrent) {
+    input.value = pendingRecipients.shift();
+    input.setCustomValidity('');
+    addedCount = 1;
+  }
+
+  let anchorRow = input.closest('.recipient-row');
+  const availableRows = state.config.maxRecipients - getRecipientInputs().length;
+  const recipientsToInsert = pendingRecipients.slice(0, availableRows);
+
+  for (const recipient of recipientsToInsert) {
+    const row = createRecipientRow(recipient);
+    anchorRow.after(row);
+    anchorRow = row;
+    addedCount += 1;
+  }
+
+  updateRecipientControls();
+  updateRecipientCount();
+  anchorRow.querySelector('.recipient-input').focus();
+
+  if (recipientsToInsert.length < pendingRecipients.length) {
+    showToast(`Solo se añadieron ${addedCount}: el máximo es ${state.config.maxRecipients}.`, true);
+  } else {
+    showToast(`${addedCount} correos añadidos.`);
+  }
+  return true;
+}
+
+function resetRecipientFields() {
+  const rows = [...elements.recipientList.querySelectorAll('.recipient-row')];
+  rows.slice(1).forEach((row) => row.remove());
+  const input = rows[0].querySelector('.recipient-input');
+  input.value = '';
+  input.setCustomValidity('');
+  updateRecipientControls();
+}
+
 function updateRecipientCount() {
-  const { valid, invalid } = parseRecipients(elements.recipients.value);
+  const { valid, invalid } = parseRecipients(getRecipientInputs().map((input) => input.value));
   elements.recipientCount.textContent = `${valid.length} ${valid.length === 1 ? 'válido' : 'válidos'}`;
   elements.recipientFeedback.textContent = invalid.length
     ? `No válidos: ${invalid.slice(0, 3).join(', ')}${invalid.length > 3 ? '…' : ''}`
@@ -90,37 +210,41 @@ function collectSmtpConfig() {
     host: elements.host.value.trim(),
     port: Number(elements.port.value),
     security: elements.security.value,
-    username: elements.username.value.trim(),
-    password: elements.password.value
+    username: elements.username.value.trim()
   };
 }
 
 function validateSmtpFields() {
-  const smtp = collectSmtpConfig();
-  const credentialsArePaired = Boolean(smtp.username) === Boolean(smtp.password);
-  elements.username.setCustomValidity(credentialsArePaired ? '' : 'Indica usuario y contraseña juntos.');
-  elements.password.setCustomValidity(credentialsArePaired ? '' : 'Indica usuario y contraseña juntos.');
+  if (!state.config.smtpPasswordConfigured) {
+    elements.smtpFeedback.className = 'inline-feedback is-error';
+    elements.smtpFeedback.textContent = 'Configura SMTP_PASSWORD en las variables del servidor.';
+    return false;
+  }
 
   return (
     elements.host.checkValidity() &&
     elements.port.checkValidity() &&
-    elements.username.checkValidity() &&
-    elements.password.checkValidity()
+    elements.username.checkValidity()
   );
 }
 
 function validateBeforeSend() {
+  const recipientInputs = getRecipientInputs();
+  recipientInputs.forEach((input) => input.setCustomValidity(''));
   const parsed = updateRecipientCount();
   validateSmtpFields();
 
   if (parsed.invalid.length) {
-    elements.recipients.setCustomValidity('Corrige o elimina las direcciones no válidas.');
+    const invalidKeys = new Set(parsed.invalid.map((address) => address.toLowerCase()));
+    recipientInputs.forEach((input) => {
+      if (invalidKeys.has(input.value.trim().toLowerCase())) {
+        input.setCustomValidity('Introduce una dirección de correo válida.');
+      }
+    });
   } else if (parsed.valid.length > state.config.maxRecipients) {
-    elements.recipients.setCustomValidity(
+    recipientInputs[0].setCustomValidity(
       `El máximo es de ${state.config.maxRecipients} destinatarios por operación.`
     );
-  } else {
-    elements.recipients.setCustomValidity('');
   }
 
   const files = [...elements.attachments.files];
@@ -137,7 +261,7 @@ function validateBeforeSend() {
     return null;
   }
 
-  if (!form.checkValidity() || !validateSmtpFields()) {
+  if (!validateSmtpFields() || !form.checkValidity()) {
     form.reportValidity();
     return null;
   }
@@ -159,6 +283,7 @@ function setSending(sending) {
   document.querySelectorAll('.preset-button').forEach((button) => {
     button.disabled = sending;
   });
+  updateRecipientControls();
 }
 
 function showToast(message, isError = false) {
@@ -286,12 +411,12 @@ function askForConfirmation(count) {
 }
 
 async function testSmtp() {
-  validateSmtpFields();
+  const smtpIsValid = validateSmtpFields();
   if (
+    !smtpIsValid ||
     !elements.host.checkValidity() ||
     !elements.port.checkValidity() ||
-    !elements.username.checkValidity() ||
-    !elements.password.checkValidity()
+    !elements.username.checkValidity()
   ) {
     form.reportValidity();
     return;
@@ -417,13 +542,11 @@ function downloadCsv() {
 function resetForm() {
   if (state.sending) return;
   form.reset();
+  resetRecipientFields();
   applyPreset('gmail');
-  elements.password.type = 'password';
-  elements.togglePassword.textContent = 'Mostrar';
-  elements.togglePassword.setAttribute('aria-label', 'Mostrar contraseña');
   elements.fileSummary.textContent = 'Ningún archivo seleccionado';
   elements.smtpFeedback.className = 'inline-feedback';
-  elements.smtpFeedback.textContent = 'Las credenciales permanecen solo en esta sesión del navegador.';
+  elements.smtpFeedback.textContent = 'La contraseña SMTP nunca se envía al navegador.';
   state.results.clear();
   elements.downloadButton.disabled = true;
   setOperationState('Sin iniciar', 'idle');
@@ -450,8 +573,15 @@ async function loadConfig() {
     const response = await fetch('/api/config');
     if (!response.ok) return;
     state.config = { ...state.config, ...(await response.json()) };
+    elements.passwordStatus.textContent = state.config.smtpPasswordConfigured
+      ? 'Configurada de forma segura en el servidor'
+      : 'Falta la variable SMTP_PASSWORD';
+    elements.passwordStatus.classList.toggle('is-error', !state.config.smtpPasswordConfigured);
     elements.delayMs.value = String(state.config.sendDelayMs);
-    elements.recipients.placeholder = `Hasta ${state.config.maxRecipients} direcciones; separa con saltos de línea, comas o punto y coma`;
+    elements.recipientLimit.textContent =
+      `Pega una lista separada por comas, punto y coma, espacios o saltos. ` +
+      `Máximo ${state.config.maxRecipients}.`;
+    updateRecipientControls();
     elements.attachments.accept = '*/*';
   } catch {
     showToast('No se pudo cargar la configuración del servidor.', true);
@@ -469,9 +599,37 @@ document.querySelectorAll('input[name="contentType"]').forEach((input) => {
         : 'Se enviará como texto plano. No se añade seguimiento de aperturas.';
   });
 });
-elements.recipients.addEventListener('input', () => {
-  elements.recipients.setCustomValidity('');
+elements.addRecipient.addEventListener('click', () => addRecipient());
+elements.recipientList.addEventListener('input', (event) => {
+  if (!event.target.classList.contains('recipient-input')) return;
+  event.target.setCustomValidity('');
   updateRecipientCount();
+});
+elements.recipientList.addEventListener('paste', (event) => {
+  if (!event.target.classList.contains('recipient-input')) return;
+  const pastedText = event.clipboardData?.getData('text') || '';
+  if (addPastedRecipients(event.target, pastedText)) event.preventDefault();
+});
+elements.recipientList.addEventListener('keydown', (event) => {
+  if (event.key !== 'Enter' || !event.target.classList.contains('recipient-input')) return;
+  event.preventDefault();
+  if (!event.target.value.trim() || !event.target.checkValidity()) {
+    event.target.reportValidity();
+    return;
+  }
+  addRecipient();
+});
+elements.recipientList.addEventListener('click', (event) => {
+  const removeButton = event.target.closest('.recipient-remove');
+  if (!removeButton || removeButton.disabled) return;
+
+  const rows = [...elements.recipientList.querySelectorAll('.recipient-row')];
+  const removedIndex = rows.indexOf(removeButton.closest('.recipient-row'));
+  rows[removedIndex].remove();
+  const remainingInputs = getRecipientInputs();
+  updateRecipientControls();
+  updateRecipientCount();
+  remainingInputs[Math.max(0, removedIndex - 1)].focus();
 });
 elements.attachments.addEventListener('change', () => {
   const files = [...elements.attachments.files];
@@ -481,14 +639,13 @@ elements.attachments.addEventListener('change', () => {
         .join(', ')}`
     : 'Ningún archivo seleccionado';
 });
-elements.togglePassword.addEventListener('click', () => {
-  const show = elements.password.type === 'password';
-  elements.password.type = show ? 'text' : 'password';
-  elements.togglePassword.textContent = show ? 'Ocultar' : 'Mostrar';
-  elements.togglePassword.setAttribute(
-    'aria-label',
-    show ? 'Ocultar contraseña' : 'Mostrar contraseña'
-  );
+elements.logout.addEventListener('click', async () => {
+  elements.logout.disabled = true;
+  try {
+    await fetch('/api/logout', { method: 'POST' });
+  } finally {
+    window.location.replace('/login');
+  }
 });
 elements.testButton.addEventListener('click', testSmtp);
 elements.cancelButton.addEventListener('click', cancelSend);
@@ -496,5 +653,6 @@ elements.downloadButton.addEventListener('click', downloadCsv);
 elements.clearButton.addEventListener('click', resetForm);
 form.addEventListener('submit', startSend);
 
+updateRecipientControls();
 updateRecipientCount();
 loadConfig();
