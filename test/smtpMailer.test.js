@@ -4,6 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const nodemailer = require('nodemailer');
 const {
+  friendlySmtpError,
   verifyConnection,
   sendIndividualEmails
 } = require('../services/smtpMailer');
@@ -65,6 +66,13 @@ test('verifyConnection corta una comprobación SMTP bloqueada', async (context) 
 
   await assert.rejects(verifyConnection(smtpConfig, 10), { code: 'ETIMEDOUT' });
   assert.equal(closeCalls, 1);
+});
+
+test('explica los errores de resolución DNS sin filtrar detalles internos', () => {
+  assert.equal(
+    friendlySmtpError({ code: 'EDNS' }),
+    'No se pudo resolver el servidor SMTP. Revisa el nombre del servidor y la conexión DNS.'
+  );
 });
 
 test('envía una operación independiente por destinatario y continúa tras un error', async (context) => {

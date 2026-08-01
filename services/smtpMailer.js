@@ -38,6 +38,9 @@ function friendlySmtpError(error) {
   if (code === 'ETIMEDOUT') {
     return 'La prueba SMTP superó el tiempo máximo. Revisa el servidor, el puerto y la red.';
   }
+  if (['EDNS', 'ENOTFOUND', 'EAI_AGAIN'].includes(code)) {
+    return 'No se pudo resolver el servidor SMTP. Revisa el nombre del servidor y la conexión DNS.';
+  }
   if (['ECONNECTION', 'ECONNREFUSED', 'ESOCKET'].includes(code)) {
     return 'No se pudo conectar con el servidor SMTP.';
   }

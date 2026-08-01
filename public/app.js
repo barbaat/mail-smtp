@@ -465,17 +465,30 @@ async function testSmtp() {
 
   setButtonLoading(elements.testButton, true);
   elements.smtpFeedback.className = 'inline-feedback';
-  elements.smtpFeedback.textContent = 'Comprobando conexión…';
-  const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), 20_000);
+  elements.smtpFeedback.textContent = 'Comprobando conexión… Puede tardar hasta 20 segundos.';
+  let timeoutId;
 
   try {
-    const response = await fetch('/api/test-smtp', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ smtpConfig: collectSmtpConfig() }),
-      signal: controller.signal
+    const controller = new AbortController();
+    const timeoutRequest = new Promise((_, reject) => {
+      timeoutId = window.setTimeout(() => {
+        controller.abort();
+        const error = new Error(
+          'La prueba tardó demasiado. Revisa el servidor SMTP, el puerto y la red.'
+        );
+        error.name = 'TimeoutError';
+        reject(error);
+      }, 20_000);
     });
+    const response = await Promise.race([
+      fetch('/api/test-smtp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ smtpConfig: collectSmtpConfig() }),
+        signal: controller.signal
+      }),
+      timeoutRequest
+    ]);
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       throw new Error(
@@ -490,7 +503,7 @@ async function testSmtp() {
   } catch (error) {
     elements.smtpFeedback.className = 'inline-feedback is-error';
     elements.smtpFeedback.textContent =
-      error.name === 'AbortError'
+      error.name === 'AbortError' || error.name === 'TimeoutError'
         ? 'La prueba tardó demasiado. Revisa el servidor SMTP, el puerto y la red.'
         : error.message || 'No se pudo comprobar la conexión.';
   } finally {

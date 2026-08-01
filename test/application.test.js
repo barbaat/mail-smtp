@@ -38,7 +38,7 @@ test('la página principal referencia sus recursos y controles críticos', () =>
 
   for (const expected of [
     'href="/styles.css"',
-    'src="/app.js"',
+    'src="/app.js?v=20260801-1"',
     'id="smtp-host"',
     'value="smtp.gmail.com"',
     'value="465"',
