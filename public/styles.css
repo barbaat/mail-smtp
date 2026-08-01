@@ -28,6 +28,7 @@
 html {
   color-scheme: light;
   scroll-behavior: smooth;
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -40,6 +41,12 @@ body {
   font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.5;
+}
+
+html.is-modal-open,
+body.is-modal-open {
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 button,
@@ -758,6 +765,9 @@ textarea:invalid:not(:placeholder-shown) {
   margin: 0 auto;
   padding: 0;
   overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  touch-action: pan-y;
   color: var(--ink);
   border: 0;
   border-radius: var(--radius);

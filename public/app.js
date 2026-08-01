@@ -445,7 +445,10 @@ function askForConfirmation(count) {
 }
 
 function openManifest() {
-  if (!elements.manifestDialog.open) elements.manifestDialog.showModal();
+  if (elements.manifestDialog.open) return;
+  elements.manifestDialog.showModal();
+  document.documentElement.classList.add('is-modal-open');
+  document.body.classList.add('is-modal-open');
 }
 
 async function testSmtp() {
@@ -696,6 +699,10 @@ elements.logout.addEventListener('click', async () => {
 });
 elements.openManifest.addEventListener('click', openManifest);
 elements.closeManifest.addEventListener('click', () => elements.manifestDialog.close());
+elements.manifestDialog.addEventListener('close', () => {
+  document.documentElement.classList.remove('is-modal-open');
+  document.body.classList.remove('is-modal-open');
+});
 elements.manifestDialog.addEventListener('click', (event) => {
   const bounds = elements.manifestDialog.getBoundingClientRect();
   const outside =
